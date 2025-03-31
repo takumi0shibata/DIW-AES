@@ -83,7 +83,7 @@ def main():
             labels = data['score'].to(device)
 
             out_train = net(input_ids, attention_mask)
-            l_tr = F.mse_loss(out_train, labels, reduction='none')
+            l_tr = F.mse_loss(out_train.squeeze(), labels, reduction='none')
 
             d = next(iter(val_loader))
 
@@ -93,7 +93,7 @@ def main():
 
             out_val = net(val_input_ids, val_attention_mask)
 
-            l_val = F.cross_entropy(out_val, val_labels, reduction='none')
+            l_val = F.mse_loss(out_val.squeeze(), val_labels, reduction='none')
             l_tr_reshape = np.array(l_tr.detach().cpu()).reshape(-1, 1)
             l_val_reshape = np.array(l_val.detach().cpu()).reshape(-1, 1)
 
@@ -110,7 +110,7 @@ def main():
             # weighted classification (wc) step
             net.train()
             out_train_wc = net(input_ids, attention_mask)
-            l_tr_wc = F.mse_loss(out_train_wc, labels, reduction='none')
+            l_tr_wc = F.mse_loss(out_train_wc.squeeze(), labels, reduction='none')
             l_tr_wc_weighted = torch.sum(l_tr_wc * w)
 
             opt.zero_grad()

@@ -122,17 +122,22 @@ class ASAP_Dataloader():
             'normalized_label': self.train_data['normalized_label'] + self.dev_data['normalized_label']
         }
 
-        # Create validation data from target data and remove selected data from target
-        # Select indices to ensure a diverse range of scores in the validation set
-        labels_array = np.array(self.target_data['label'])
-        # Calculate quantiles to ensure a spread of scores
+        # ターゲットデータから検証データを作成し、選択したデータをターゲットから削除
+        # 検証セットのスコアの多様性を確保するためのインデックスを選択
+        labels_array = np.array(self.target_data['normalized_label'])
+        # スコアの広がりを確保するために分位数を計算
         quantiles = np.quantile(labels_array, np.linspace(0, 1, self.num_val_samples))
         val_indices = []
+        unique_indices = set()
         for q in quantiles:
-            # Find the index of the closest value to each quantile
+            # 各分位数に最も近い値のインデックスを見つける
             idx = (np.abs(labels_array - q)).argmin()
-            if idx not in val_indices:  # Ensure unique indices
-                val_indices.append(idx)
+            while idx in unique_indices:
+                # 重複を避けるために最も近い次の値を見つける
+                idx = (np.abs(labels_array - q)).argsort()[len(unique_indices)]
+            unique_indices.add(idx)
+            val_indices.append(idx)
+        print(f'Val indices: {val_indices}')
         
         self.val_data = {
             'feature': [],
